@@ -26,6 +26,9 @@ def genomic_upset(options, label_names):
     input_files = options.input
     output = options.output
 
+    bed_cache = [BedTool(f) for f in options.input]
+
+
     kwargs = hlp.map_bedtools_options(options.bedtools_options)
 
     N = len(input_files)
@@ -36,8 +39,8 @@ def genomic_upset(options, label_names):
     weights = {}
 
     for t in truth_table:
-        ones = [BedTool(input_files[i]) for i in range(N) if t[i] =='1']
-        zeros = [BedTool(input_files[i]) for i in range(N) if t[i] =='0']
+        ones = [bed_cache[i] for i in range(N) if t[i] =='1']
+        zeros = [bed_cache[i] for i in range(N) if t[i] =='0']
         #report those entries in set A which do ovelap with other sets
         x = ones[0]
         if len(ones) > 1:
