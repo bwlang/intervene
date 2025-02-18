@@ -67,8 +67,8 @@ def genomic_upset(options, label_names):
                 hlp.create_dir(output+'/sets')
                 x.moveto(output+'/sets/'+file_name+'.bed')
         
-        #delete all temp files
-        helpers.cleanup()
+    #delete all temp files
+    helpers.cleanup() #fixme: 54% of execution time is spent here
 
     return(weights)
 
