@@ -10,9 +10,11 @@ BSD License (see the file LICENSE.md included with the distribution).
 @email: aziz.khan@ncmm.uio.no
 """
 import os
-from distutils.core import setup
-from setuptools import find_packages
-from intervene import __version__ as VERSION
+import re
+from setuptools import setup, find_packages
+
+with open('intervene/__init__.py') as f:
+    VERSION = re.search(r"__version__ = '(.+)'", f.read()).group(1)
 
 
 CLASSIFIERS = [
@@ -21,10 +23,11 @@ CLASSIFIERS = [
     'License :: OSI Approved :: MIT License',
     'Operating System :: OS Independent',
     'Programming Language :: Python',
-    'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python :: 3.4',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
     'Topic :: Scientific/Engineering :: Bio-Informatics',
     'Topic :: Software Development :: Libraries :: Python Modules',
 ]
@@ -38,12 +41,9 @@ install_requires = [
     'seaborn',
 ]
 
-#def readme():
-#    with open('README.rst') as f:
-#        return f.read()
-
 def readme(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    with open(os.path.join(os.path.dirname(__file__), fname)) as f:
+        return f.read()
 
 setup(
     name="intervene",
@@ -73,5 +73,6 @@ setup(
     #package_data={'intervene': ['example_data/*']},
     include_package_data=True,
     install_requires = install_requires,
+    python_requires='>=3.8',
     classifiers=CLASSIFIERS,
 )

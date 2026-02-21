@@ -1,9 +1,7 @@
-# coding: utf-8
 '''
 This code is adapted from: https://github.com/tctianchi/pyvenn
 '''
 from itertools import chain
-from collections import Iterable
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib import colors
@@ -146,7 +144,7 @@ def get_labels(data, fill=["number"]):
     if "percent" in fill:
         data_size = len(s_all)
         for k in set_collections:
-            labels[k] += "(%.1f%%)" % (100.0 * len(set_collections[k]) / data_size)
+            labels[k] += f"({100.0 * len(set_collections[k]) / data_size:.1f}%)"
 
     return labels
 

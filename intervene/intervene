@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Intervene: a tool for intersection and visualization of multiple genomic region sets
 Created on January 10, 2017
@@ -368,7 +367,7 @@ def main():
                     venn_parser.print_help()
                 else:
                     upset_parser.print_help()
-                sys.stderr.write('Missing required arg "%s"\n' % ra)
+                sys.stderr.write(f'Missing required arg "{ra}"\n')
                 sys.exit(1)
         if len(options.input) < 2:
           sys.stderr.write('Input should have at least two files.\n')
@@ -386,7 +385,7 @@ def main():
     if options.output:
         output_dir = helpers.create_dir(options.output)
     else:
-        options.output = helpers.create_dir(os.getcwd()+"/Intervene_results")
+        options.output = helpers.create_dir(f"{os.getcwd()}/Intervene_results")
 
     #check if user want to user test data to plot and get get test files.
     if options.test:
@@ -407,8 +406,7 @@ def main():
             
     #check if the number of label names are equal to number of input files
     if len(label_names) != len(options.input):
-      err_message = '\nInput error: The number label names('+str(len(label_names))+') are not equal to the number of input files('+str(len(options.input))+').\n'
-      print(err_message)
+      print(f'\nInput error: The number label names({len(label_names)}) are not equal to the number of input files({len(options.input)}).\n')
       sys.exit(1)
 
     #================== Run Pairwise module ================#
@@ -446,7 +444,7 @@ def main():
     
     #================== Run Venn module ================#
     #create output file name
-    output_name =  options.output+'/'+str(options.project)+'_'+options.command+'.'+options.figtype
+    output_name = f"{options.output}/{options.project}_{options.command}.{options.figtype}"
 
     # #check file name already exists and ask if user want to overwrite
     # if os.path.exists(output_name):
@@ -488,13 +486,10 @@ def main():
     #sys.exit(1)
     if helpers.venn_order(options.input) == 2:
         
-        print('\nGenerating a 2-way "%s" diagram. Please wait...\n' %options.command)
+        print(f'\nGenerating a 2-way "{options.command}" diagram. Please wait...\n')
         
         #If the input is a gene list
         if options.type == 'list':
-          a = open(options.input[0], 'r').read().splitlines()
-          b = open(options.input[1], 'r').read().splitlines()
-          #labels = list_venn.get_labels([a, b], fill=[str(options.fill)])
           labels = upset.list_upset(options, label_names)
           fig, ax = list_venn.venn2(labels, names=label_names, dpi=options.dpi, colors=options.colors, bordercolors=options.bordercolors,  figsize=options.figsize, fontsize=options.fontsize)
         
@@ -507,16 +502,12 @@ def main():
           #      options=options, names=label_names, plot_type=plot_type)     
     elif helpers.venn_order(options.input) == 3:
         
-        print('\nGenerating a 3-way "%s" diagram. Please wait...\n' %options.command)
+        print(f'\nGenerating a 3-way "{options.command}" diagram. Please wait...\n')
         
         #If the input is a gene list
         if options.type == 'list':
-          a = open(options.input[0], 'r').read().splitlines()
-          b = open(options.input[1], 'r').read().splitlines()
-          c = open(options.input[2], 'r').read().splitlines()
-          #labels = list_venn.get_labels([a, b, c], fill=['number'])
           labels = upset.list_upset(options, label_names)
-          fig, ax = list_venn.venn3(labels, names=label_names, dpi=options.dpi, colors=options.colors, bordercolors=options.bordercolors,  figsize=options.figsize, fontsize=options.fontsize)          
+          fig, ax = list_venn.venn3(labels, names=label_names, dpi=options.dpi, colors=options.colors, bordercolors=options.bordercolors,  figsize=options.figsize, fontsize=options.fontsize)
         #else input considered as bed file
         else:
           labels = upset.genomic_upset(options, label_names)
@@ -525,15 +516,10 @@ def main():
 
     elif helpers.venn_order(options.input) == 4:
         
-        print('\nGenerating a 4-way "%s" diagram. Please wait...\n' %options.command)
+        print(f'\nGenerating a 4-way "{options.command}" diagram. Please wait...\n')
         
         #If the input is a gene list
         if options.type == 'list':
-          a = open(options.input[0], 'r').read().splitlines()
-          b = open(options.input[1], 'r').read().splitlines()
-          c = open(options.input[2], 'r').read().splitlines()
-          d = open(options.input[3], 'r').read().splitlines()
-          #labels = list_venn.get_labels([a, b, c, d], fill=['number'])
           labels = upset.list_upset(options, label_names)
           fig, ax = list_venn.venn4(labels, names=label_names, dpi=options.dpi, colors=options.colors, bordercolors=options.bordercolors,  figsize=options.figsize, fontsize=options.fontsize)
             
@@ -546,17 +532,10 @@ def main():
                    
     elif helpers.venn_order(options.input) == 5:
         
-        print('\nGenerating a 5-way "%s" diagram. Please wait...\n' %options.command)
+        print(f'\nGenerating a 5-way "{options.command}" diagram. Please wait...\n')
         
         #If the input is a gene list
         if options.type == 'list':
-          a = open(options.input[0], 'r').read().splitlines()
-          b = open(options.input[1], 'r').read().splitlines()
-          c = open(options.input[2], 'r').read().splitlines()
-          d = open(options.input[3], 'r').read().splitlines()
-          e = open(options.input[4], 'r').read().splitlines()
-
-          #labels = list_venn.get_labels([a, b, c, d, e], fill=['number'])
           labels = upset.list_upset(options, label_names)
           fig, ax = list_venn.venn5(labels, names=label_names, dpi=options.dpi, colors=options.colors, bordercolors=options.bordercolors,  figsize=options.figsize, fontsize=options.fontsize)
         
@@ -568,18 +547,10 @@ def main():
         
     elif helpers.venn_order(options.input) == 6:
         
-        print('\nGenerating a 6-way "%s" diagram. Please wait...\n' %options.command)
+        print(f'\nGenerating a 6-way "{options.command}" diagram. Please wait...\n')
 
         #If the input is a gene list
         if options.type == 'list':
-          a = open(options.input[0], 'r').read().splitlines()
-          b = open(options.input[1], 'r').read().splitlines()
-          c = open(options.input[2], 'r').read().splitlines()
-          d = open(options.input[3], 'r').read().splitlines()
-          e = open(options.input[4], 'r').read().splitlines()
-          f = open(options.input[5], 'r').read().splitlines()
-
-          #labels = list_venn.get_labels([a, b, c, d, e, f], fill=['number'])
           labels = upset.list_upset(options, label_names)
           fig, ax = list_venn.venn6(labels, names=label_names, dpi=options.dpi, colors=options.colors, bordercolors=options.bordercolors,  figsize=options.figsize, fontsize=options.fontsize)
                 
@@ -599,7 +570,7 @@ def main():
       
     fig.savefig(output_name, dpi=options.dpi, bbox_inches='tight')
     plt.close()
-    print('\nDone! Please check your results @ '+options.output+'. \nThank you for using Intervene!\n')
+    print(f'\nDone! Please check your results @ {options.output}. \nThank you for using Intervene!\n')
 
 if __name__ == '__main__':
     try:

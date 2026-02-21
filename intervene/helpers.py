@@ -1,4 +1,3 @@
-# coding: utf-8
 '''
 Helper functions for Intervene
 '''
@@ -15,8 +14,8 @@ def create_dir(dir_path):
     if not os.path.exists(dir_path):
         try:
             os.makedirs(dir_path)
-        except:
-            sys.exit( "Output directory (%s) could not be created." % dir_path )
+        except OSError:
+            sys.exit(f"Output directory ({dir_path}) could not be created.")
     return dir_path
 
 def venn_order(input_files):
@@ -52,8 +51,8 @@ def map_bedtools_options(bedtools_options):
                     kwargs[args[0]]= args[1]
             else:
                 kwargs[args[0]]= True
-    except:
-        pass  
+    except (ValueError, AttributeError):
+        pass
     
     return kwargs
 
@@ -105,7 +104,7 @@ def example_filename(fn,sub_dir=None):
       fn = os.path.join(data_dir(), fn)
     #print(fn)
     if not os.path.exists(fn):
-        raise ValueError("%s does not exist" % fn)
+        raise ValueError(f"{fn} does not exist")
     return fn
 
 def get_test_data(module_name):

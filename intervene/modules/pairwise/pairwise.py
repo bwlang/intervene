@@ -1,5 +1,3 @@
-# coding: utf-8
-
 """
 Intervene: a tool for intersection and visualization of multiple genomic region sets
 Created on January 10, 2017
@@ -11,12 +9,12 @@ import collections
 import time
 import os.path as op
 from pybedtools import BedTool, chromsizes_to_file, chromsizes
+import matplotlib.pyplot as plt
 from matplotlib import colors, rc
 import numpy as np
 import pandas as pd
 import pylab as pl
 import scipy.cluster.hierarchy as sch
-import string
 from matplotlib import gridspec
 import seaborn as sns
 from intervene import helpers
@@ -68,8 +66,7 @@ def create_matrix(beds, bed_names, func, verbose=False, sort_bed=False, **kwopti
             if sort_bed:
                 b = b.sort()
             if verbose:
-                sys.stderr.write(
-                        '%(i)s of %(total)s: %(fa)s + %(fb)s\n' % locals())
+                sys.stderr.write(f'{i} of {total}: {fa} + {fb}\n')
                 sys.stderr.flush()
 
             matrix[bed_names[ia]][bed_names[ib]] = func(a, b, **kwoptions)
@@ -96,8 +93,7 @@ def create_list_matrix(lists, list_names, verbose=False):
             with open(lb) as f:
                 b = f.read().splitlines()
             if verbose:
-                sys.stderr.write(
-                        '%(i)s of %(total)s: %(fa)s + %(fb)s\n' % locals())
+                sys.stderr.write(f'{i} of {total}: {la} + {lb}\n')
                 sys.stderr.flush()
 
             matrix[list_names[ia]][list_names[ib]] = len(a.intersection(b))
@@ -162,7 +158,7 @@ def barplot(series, matrix, outfile, options, max_size=1):
     ax.tick_params(axis='y', which='major', labelsize=options.fontsize)
 
     # Grid lines.
-    ax.grid(b=False, which='major', axis='both', alpha=0.1)
+    ax.grid(visible=False)
 
     # Tick marks for the x-axis. max(list_size)
     ax.set_xticks((max_size,1))
@@ -305,8 +301,8 @@ def heatmap_dendrogram(dataframe, outfile, options):
     else:
         sns_plot = sns.clustermap(dataframe, cmap="RdBu", linewidths=.3)
 
-    sns.plt.setp(sns_plot.ax_heatmap.yaxis.get_majorticklabels(), rotation=0)
-    sns.plt.suptitle(options.hlabel)
+    plt.setp(sns_plot.ax_heatmap.yaxis.get_majorticklabels(), rotation=0)
+    plt.suptitle(options.hlabel)
 
     sns_plot.savefig(outfile, bbox_inches='tight', dpi=options.dpi)
 
@@ -337,48 +333,41 @@ def create_r_script(matrix_file, options, max_size=1):
     else:
         diag = 'diag=FALSE'
     
-    script_file =  options.output+'/'+str(options.project)+'_'+options.command+'_'+options.compute+'.R'
-    temp_f = open(script_file, 'w')
-    output_name = options.output+'/'+str(options.project)+'_'+options.command+'_'+options.compute+'.'+options.figtype
+    script_file = f"{options.output}/{options.project}_{options.command}_{options.compute}.R"
+    output_name = f"{options.output}/{options.project}_{options.command}_{options.compute}.{options.figtype}"
 
-    temp_f.write('#!/usr/bin/env Rscript'+"\n")
-    temp_f.write('if (suppressMessages(!require("corrplot"))) suppressMessages(install.packages("corrplot", repos="http://cran.us.r-project.org"))\n')
-    temp_f.write('library("corrplot")\n')
-    if options.figtype == 'ps':
-        temp_f.write('if (suppressMessages(!require("Cairo"))) suppressMessages(install.packages("Cairo", repos="http://cran.us.r-project.org"))\n')
-        temp_f.write('library("Cairo")\n')
-    
-    if options.figtype == 'pdf' or options.figtype == 'svg':
-        temp_f.write(options.figtype+'("'+output_name+'", width='+str(options.figsize[0])+', height='+str(options.figsize[1])+')'+'\n')
-    
-    elif options.figtype == 'ps':
-        temp_f.write('cairo_ps("'+output_name+'", width='+str(options.figsize[0])+', height='+str(options.figsize[1])+')'+'\n')
-    else:
-        temp_f.write(options.figtype+'("'+output_name+'", width='+str(options.dpi*options.figsize[0])+', height='+str(options.dpi*options.figsize[1])+', res='+str(options.dpi)+')\n')
-     
-    temp_f.write("\n")
+    with open(script_file, 'w') as temp_f:
+        temp_f.write('#!/usr/bin/env Rscript\n')
+        temp_f.write('if (suppressMessages(!require("corrplot"))) suppressMessages(install.packages("corrplot", repos="http://cran.us.r-project.org"))\n')
+        temp_f.write('library("corrplot")\n')
+        if options.figtype == 'ps':
+            temp_f.write('if (suppressMessages(!require("Cairo"))) suppressMessages(install.packages("Cairo", repos="http://cran.us.r-project.org"))\n')
+            temp_f.write('library("Cairo")\n')
 
-    #cmd = 'heatmap_intervene.R %s %s %s %s %s %s %s' % (matrix_file,,options.compute, output_name,, , options.dpi)
-    #cl.lim= c('+str(min_val)+','+str(max_val)+'), 
-    temp_f.write('intersection_matrix <- as.matrix(read.table("'+matrix_file+'"))\n')
-    if options.corr:
-        temp_f.write('intersection_matrix <- cor(intersection_matrix, method="'+options.corrtype+'")\n')
-        temp_f.write('corrplot(intersection_matrix, method ="'+options.htype+'", title="'+str(options.title)+'-'+options.corrtype+' correlation('+options.hlabel+')", tl.col="black", tl.cex=0.8, is.corr = TRUE, '+diag+', addrect=1, mar=c(0,0,2,1), rect.col = "black")\n')
-    else:
-        temp_f.write('corrplot(intersection_matrix, method ="'+options.htype+'", title="'+str(options.title)+'-'+options.hlabel+'", tl.col="black", tl.cex=0.8, is.corr = FALSE, '+diag+', addrect=1, mar=c(0,0,2,1), rect.col = "black")\n')
+        if options.figtype == 'pdf' or options.figtype == 'svg':
+            temp_f.write(f'{options.figtype}("{output_name}", width={options.figsize[0]}, height={options.figsize[1]})\n')
+        elif options.figtype == 'ps':
+            temp_f.write(f'cairo_ps("{output_name}", width={options.figsize[0]}, height={options.figsize[1]})\n')
+        else:
+            temp_f.write(f'{options.figtype}("{output_name}", width={options.dpi * options.figsize[0]}, height={options.dpi * options.figsize[1]}, res={options.dpi})\n')
 
-    temp_f.write('invisible(dev.off())\n')
+        temp_f.write('\n')
+        temp_f.write(f'intersection_matrix <- as.matrix(read.table("{matrix_file}"))\n')
+        if options.corr:
+            temp_f.write(f'intersection_matrix <- cor(intersection_matrix, method="{options.corrtype}")\n')
+            temp_f.write(f'corrplot(intersection_matrix, method ="{options.htype}", title="{options.title}-{options.corrtype} correlation({options.hlabel})", tl.col="black", tl.cex=0.8, is.corr = TRUE, {diag}, addrect=1, mar=c(0,0,2,1), rect.col = "black")\n')
+        else:
+            temp_f.write(f'corrplot(intersection_matrix, method ="{options.htype}", title="{options.title}-{options.hlabel}", tl.col="black", tl.cex=0.8, is.corr = FALSE, {diag}, addrect=1, mar=c(0,0,2,1), rect.col = "black")\n')
 
-    cmd = temp_f.name
-    temp_f.close()
+        temp_f.write('invisible(dev.off())\n')
 
-    if options.scriptonly == False:
-        os.system('chmod +x '+cmd)
-        os.system(cmd)
-        print('\nYou are done! Please check your results @ '+options.output+'. \nThank you for using Intervene!\n')
+    if not options.scriptonly:
+        os.system(f'chmod +x {script_file}')
+        os.system(script_file)
+        print(f'\nYou are done! Please check your results @ {options.output}. \nThank you for using Intervene!\n')
         sys.exit(0)
     else:
-        print('\nYou are done! Please check your UpSet plot script and Shiny App input @ '+options.output+'. \nThank you for using Intervene!\n')
+        print(f'\nYou are done! Please check your UpSet plot script and Shiny App input @ {options.output}. \nThank you for using Intervene!\n')
         sys.exit(0)
         
 def pairwise_intersection(label_names, options):
@@ -419,31 +408,19 @@ def pairwise_intersection(label_names, options):
     
     nfiles = len(options.input)
 
-    script_file =  options.output+'/'+str(options.project)+'_'+options.command+'_'+options.compute+'.R'
+    script_file = f"{options.output}/{options.project}_{options.command}_{options.compute}.R"
 
-    #if options.verbose:
-    #    sys.stderr.write('Time to construct %s x %s matrix: %.1fs' \
-    #            % (nfiles, nfiles, (t1 - t0)) + '\n')
-    ## Keyes were sorted until version 0.6.4
-    #keys = sorted(matrix.keys()) 
     keys = matrix.keys()
-    
-    matrix_file =  options.output+'/'+str(options.project)+'_'+options.command+'_'+options.compute+'_matrix.txt'
 
-    f = open(matrix_file, 'w')
+    matrix_file = f"{options.output}/{options.project}_{options.command}_{options.compute}_matrix.txt"
 
-    #if options.stdout:
-    #sys.stdout.write("\t" + "\t".join(keys) + '\n')
-    f.write("\t" + "\t".join(keys) + '\n')
-    for k in keys:
-        #sys.stdout.write(k)
-        f.write(k)
-        for j in keys:
-            #sys.stdout.write('\t' + str(matrix[k][j]))
-            f.write('\t' + str(matrix[k][j]))
-        #sys.stdout.write('\n')
-        f.write('\n')
-    f.close()
+    with open(matrix_file, 'w') as f:
+        f.write("\t" + "\t".join(keys) + '\n')
+        for k in keys:
+            f.write(k)
+            for j in keys:
+                f.write('\t' + str(matrix[k][j]))
+            f.write('\n')
 
     #Set heatmap label
     if options.compute == 'count':
@@ -461,7 +438,7 @@ def pairwise_intersection(label_names, options):
     if options.htype == 'tribar' or options.htype == 'dendrogram':
         rc("font", family="serif")
         ncols = nfiles
-        matrix = pd.read_table(matrix_file,index_col=0, delim_whitespace=True)
+        matrix = pd.read_table(matrix_file, index_col=0, sep=r'\s+')
 
         labels = list(matrix.columns.values)
         labels = label_names
@@ -473,7 +450,7 @@ def pairwise_intersection(label_names, options):
         #series = pd.Series(np.random.random(ncols) * 2.0, index=labels)
         #df = pd.read_csv('data.csv',index_col=0, delim_whitespace=True)
         #matrix = pd.DataFrame(np.random.random((nrows, ncols)), columns=labels)
-        outfile =  options.output+'/'+str(options.project)+'_'+options.command+'_'+options.compute+'.'+options.figtype
+        outfile = f"{options.output}/{options.project}_{options.command}_{options.compute}.{options.figtype}"
 
         #calculate pearson, kendall or spearman correlation
         if options.corr:
@@ -485,11 +462,7 @@ def pairwise_intersection(label_names, options):
         else:
             barplot(series, matrix, outfile, options, max_size=max(bed_sizes))
 
-        print('\nYou are done! Please check your results @ '+options.output+'. \nThank you for using Intervene!\n')
-        
+        print(f'\nYou are done! Please check your results @ {options.output}. \nThank you for using Intervene!\n')
+
     else:
-        #print("Please check the matrix file "+matrix_file)
         create_r_script(matrix_file, options, max_size=max(bed_sizes))
-        #cmd = 'heatmap_intervene.R %s %s %s %s %s %s %s' % (matrix_file,options.htype,options.compute, output_name,options.figtype, str(options.title), options.dpi)
-        #os.system(cmd)
-        #print('\nYou are done! Please check your results @ '+options.output+'. \nThank you for using Intervene!\n')
