@@ -3,7 +3,6 @@ Helper functions for Intervene
 '''
 import sys
 import os
-import intervene
 from matplotlib import colors
 
 def create_dir(dir_path):

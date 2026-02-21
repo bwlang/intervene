@@ -176,7 +176,7 @@ def create_r_script(labels, names, options):
 
     #options.shiny = True
     #If shiny output
-    if options.showshiny == False:
+    if not options.showshiny:
 
         shiny_import =  options.output+'/'+str(options.project)+'_'+options.command+'_combinations.txt'
         shiny_file = open(shiny_import, 'w')
@@ -193,12 +193,12 @@ def create_r_script(labels, names, options):
     #if options.ninter == 0:
     #    options.ninter = "NA"
 
-    if options.showzero == False:
+    if not options.showzero:
         options.showzero = 'NULL'
     else:
         options.showzero = "'on'"
 
-    temp_f.write('upset(fromExpression(expressionInput), nsets='+str(len(key))+', nintersects='+str(options.ninter)+', show.numbers="'+str(options.showsize)+'", main.bar.color="'+options.mbcolor+'", sets.bar.color="'+options.sbcolor+'", empty.intersections='+str(options.showzero)+', order.by = "'+options.order+'", number.angles = 0, mainbar.y.label ="'+options.mblabel+'", sets.x.label ="'+options.sxlabel+'")\n')
+    temp_f.write('upset(fromExpression(expressionInput), nsets='+str(len(names))+', nintersects='+str(options.ninter)+', show.numbers="'+str(options.showsize)+'", main.bar.color="'+options.mbcolor+'", sets.bar.color="'+options.sbcolor+'", empty.intersections='+str(options.showzero)+', order.by = "'+options.order+'", number.angles = 0, mainbar.y.label ="'+options.mblabel+'", sets.x.label ="'+options.sxlabel+'")\n')
     temp_f.write('invisible(dev.off())\n')
 
     #print temp_f.read()
@@ -207,7 +207,7 @@ def create_r_script(labels, names, options):
     cmd = temp_f.name
     temp_f.close()
 
-    if options.scriptonly == False:
+    if not options.scriptonly:
         os.system('chmod +x '+cmd)
         os.system(cmd)
         print('\nYou are done! Please check your results @ '+options.output+'. \nThank you for using Intervene!\n')
@@ -248,7 +248,7 @@ def draw_genomic(labels, names, output, fig_type):
     #print temp_f.read()
     #print temp_f.name
     temp_f.close()
-    cmd = 'upset_plot_intervene.R %s %s %s %s %s ' % ('genomic',len(key),temp_f.name, output, fig_type)
+    cmd = 'upset_plot_intervene.R %s %s %s %s %s ' % ('genomic',len(names),temp_f.name, output, fig_type)
     os.system(cmd)
     sys.exit(0)
 

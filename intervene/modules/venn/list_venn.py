@@ -4,8 +4,6 @@ This code is adapted from: https://github.com/tctianchi/pyvenn
 from itertools import chain
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from matplotlib import colors
-import math
 import matplotlib
 
 #TrueType fonts for PostScript and PDF files

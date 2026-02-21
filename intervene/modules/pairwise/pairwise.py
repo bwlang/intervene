@@ -6,9 +6,9 @@ Created on January 10, 2017
 import os
 import sys
 import collections
-import time
 import os.path as op
-from pybedtools import BedTool, chromsizes_to_file, chromsizes
+from pybedtools import BedTool
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import colors, rc
 import numpy as np
@@ -256,7 +256,7 @@ def heatmap_triangle(dataframe, axes, options):
     #   min_val = -1
     # -1.0 correlation is blue, 0.0 is white, 1.0 is red.
     # 1.0 correlation is blue, 0.0 is white, 1.0 is red.
-    cmap = pl.cm.RdBu_r
+    cmap = matplotlib.colormaps["RdBu_r"]
     norm = colors.BoundaryNorm(np.linspace(min_val, max_val, 20), cmap.N)
 
     # This MUST be before the call to pl.pcolormesh() to align properly.
@@ -316,17 +316,6 @@ def create_r_script(matrix_file, options, max_size=1):
 
     if not options.figsize:
         options.figsize = (8,8)
-
-    if options.compute == 'reldist':
-        min_val = 0.0
-        max_val = 0.5
-
-    elif options.compute == 'count':
-        min_val = 0.0
-        max_val = max_size
-    else:
-        min_val = 0.0
-        max_val = 1.0
 
     if options.diagonal:
         diag = 'diag=TRUE'
@@ -406,10 +395,6 @@ def pairwise_intersection(label_names, options):
     else:
         matrix, bed_sizes = create_list_matrix(lists=options.input, list_names=label_names, verbose=False)
     
-    nfiles = len(options.input)
-
-    script_file = f"{options.output}/{options.project}_{options.command}_{options.compute}.R"
-
     keys = matrix.keys()
 
     matrix_file = f"{options.output}/{options.project}_{options.command}_{options.compute}_matrix.txt"
@@ -437,7 +422,6 @@ def pairwise_intersection(label_names, options):
 
     if options.htype == 'tribar' or options.htype == 'dendrogram':
         rc("font", family="serif")
-        ncols = nfiles
         matrix = pd.read_table(matrix_file, index_col=0, sep=r'\s+')
 
         labels = list(matrix.columns.values)

@@ -3,9 +3,6 @@ InterVene: a tool for intersection and visualization of multiple genomic region 
 Created on January 10, 2017
 @author: <Aziz Khan>aziz.khan@ncmm.uio.no
 """
-import sys
-import os
-from pybedtools import BedTool, helpers
 from intervene.modules.venn import list_venn
 from intervene.modules.upset import upset
 
