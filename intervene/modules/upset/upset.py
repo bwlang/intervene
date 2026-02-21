@@ -32,8 +32,17 @@ def genomic_upset(options, label_names):
     kwargs = hlp.map_bedtools_options(options.bedtools_options)
 
     N = len(input_files)
-    
-    # Generate a truth table of intersections to calculate 
+
+    # Build a non-redundant union of all input intervals so that every
+    # genomic locus is counted exactly once (merge-then-count approach).
+    # This ensures symmetric counts: unlike anchoring on ones[0], the result
+    # is independent of set ordering.
+    union = bed_cache[0]
+    for bed in bed_cache[1:]:
+        union = union.cat(bed, postmerge=False)
+    union = union.sort().merge()
+
+    # Generate a truth table of intersections to calculate
     truth_table = [x for x in itertools.product("01", repeat=N)][1:]
 
     weights = {}
@@ -41,19 +50,16 @@ def genomic_upset(options, label_names):
     for t in truth_table:
         ones = [bed_cache[i] for i in range(N) if t[i] =='1']
         zeros = [bed_cache[i] for i in range(N) if t[i] =='0']
-        #report those entries in set A which do ovelap with other sets
-        x = ones[0]
-        if len(ones) > 1:
-            for bed in ones[1:]:
-                x = x.intersect(bed, u=True, **kwargs)
-        #report those entries in set A which doesn't ovelap with other sets
-        if len(zeros) > 0:
-            #y = zeros[0]
-            for bed in zeros[0:]:
-                x = x.intersect(bed, v=True, **kwargs)
-        X = (x).count()
+        # Start from the merged union rather than ones[0], so each locus
+        # is counted once regardless of which set it originally came from.
+        x = union
+        for bed in ones:
+            x = x.intersect(bed, u=True, **kwargs)
+        for bed in zeros:
+            x = x.intersect(bed, v=True, **kwargs)
+        X = x.count()
         weights[''.join(t)] = X
-        
+
         #save the intersected results
         if options.saveoverlaps:
             if X >= options.overlapthresh:
@@ -65,12 +71,11 @@ def genomic_upset(options, label_names):
                     name_itr +=1
                 file_name = ''.join(t)+file_name
                 hlp.create_dir(output+'/sets')
-                x.moveto(output+'/sets/'+file_name+'.bed')
-        
-    #delete all temp files
-    helpers.cleanup() #fixme: 54% of execution time is spent here
+                x.saveas(output+'/sets/'+file_name+'.bed')
 
-    return(weights)
+    helpers.cleanup()
+
+    return weights
 
 def list_upset(options, label_names):
     '''
