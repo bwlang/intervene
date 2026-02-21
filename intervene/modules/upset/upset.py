@@ -42,36 +42,47 @@ def genomic_upset(options, label_names):
         union = union.cat(bed, postmerge=False)
     union = union.sort().merge()
 
-    # Generate a truth table of intersections to calculate
-    truth_table = [x for x in itertools.product("01", repeat=N)][1:]
+    # Assign every union interval an integer bitmask (bit j = overlaps set j).
+    # This requires exactly N bedtools intersect calls instead of O(2^N * N),
+    # and produces far fewer temp files (reducing cleanup overhead).
+    union_intervals = [(iv.chrom, iv.start, iv.end) for iv in union]
+    coord_to_idx = {iv: i for i, iv in enumerate(union_intervals)}
+    membership = [0] * len(union_intervals)
 
+    for j, bed in enumerate(bed_cache):
+        for iv in union.intersect(bed, u=True, **kwargs):
+            idx = coord_to_idx[(iv.chrom, iv.start, iv.end)]
+            membership[idx] |= (1 << j)
+
+    # Count intervals per exclusive combination and build the weights dict.
+    from collections import Counter, defaultdict
+    counts = Counter(membership)
     weights = {}
+    for mask, count in counts.items():
+        if mask == 0:
+            continue
+        key = ''.join('1' if (mask >> j) & 1 else '0' for j in range(N))
+        weights[key] = count
 
-    for t in truth_table:
-        ones = [bed_cache[i] for i in range(N) if t[i] =='1']
-        zeros = [bed_cache[i] for i in range(N) if t[i] =='0']
-        # Start from the merged union rather than ones[0], so each locus
-        # is counted once regardless of which set it originally came from.
-        x = union
-        for bed in ones:
-            x = x.intersect(bed, u=True, **kwargs)
-        for bed in zeros:
-            x = x.intersect(bed, v=True, **kwargs)
-        X = x.count()
-        weights[''.join(t)] = X
+    # Save overlapping regions per combination if requested.
+    if options.saveoverlaps:
+        intervals_by_key = defaultdict(list)
+        for i, mask in enumerate(membership):
+            if mask == 0:
+                continue
+            key = ''.join('1' if (mask >> j) & 1 else '0' for j in range(N))
+            intervals_by_key[key].append(union_intervals[i])
 
-        #save the intersected results
-        if options.saveoverlaps:
-            if X >= options.overlapthresh:
-                file_name = ''
-                name_itr = 0
-                for name in t:
-                    if name == '1':
-                        file_name += '_'+label_names[name_itr]
-                    name_itr +=1
-                file_name = ''.join(t)+file_name
-                hlp.create_dir(output+'/sets')
-                x.saveas(output+'/sets/'+file_name+'.bed')
+        for key, intervals in intervals_by_key.items():
+            if len(intervals) >= options.overlapthresh:
+                file_name = ''.join(
+                    '_' + label_names[j] for j, b in enumerate(key) if b == '1'
+                )
+                file_name = key + file_name
+                hlp.create_dir(f"{output}/sets")
+                with open(f"{output}/sets/{file_name}.bed", 'w') as f:
+                    for chrom, start, end in intervals:
+                        f.write(f"{chrom}\t{start}\t{end}\n")
 
     helpers.cleanup()
 
