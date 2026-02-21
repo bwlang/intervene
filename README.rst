@@ -54,39 +54,37 @@ Install using `pip`
 -------------------
 You can install Intervene from PyPi using pip.
 
-Install from PyPi::
+.. code-block:: bash
 
 	pip install intervene
 
-Note: If you install using pip, make sure to install BEDTools and R packages listed below. 
+Note: If you install using pip, make sure to install BEDTools and the R packages listed below.
 
 Intervene requires the following Python modules and R packages:
 
-	* Python (=> 3.3 ): https://www.python.org/
-	* BedTools (Latest version): https://github.com/arq5x/bedtools2
-	* pybedtools (>= 0.7.9): https://daler.github.io/pybedtools/
-	* Pandas (>= 0.16.0): http://pandas.pydata.org/
-	* Seaborn (>= 0.7.1): http://seaborn.pydata.org/
+	* Python (>= 3.10): https://www.python.org/
+	* BedTools (latest): https://github.com/arq5x/bedtools2
+	* pybedtools (>= 0.12.0): https://daler.github.io/pybedtools/
+	* Pandas (>= 3.0): http://pandas.pydata.org/
+	* Seaborn (>= 0.13): http://seaborn.pydata.org/
 	* R (>= 3.0): https://www.r-project.org/
-	* R packages including UpSetR (v1.4.0), corrplot
+	* R packages: UpSetR (>= 1.4.0), corrplot
 
 Install BEDTools
 ----------------
-We are using pybedtools, which is Python wrapper for BEDTools. So, BEDTools should be installed before using Intervene. It's recomended to have a latest version, but if you have an older version already install, it should be fine.
-
-A quick installation, if you have conda installed.
+We are using pybedtools, which is a Python wrapper for BEDTools. BEDTools must be installed before using Intervene.
 
 .. code-block:: bash
 
     conda install -c bioconda bedtools
 
-Please read the instructions at https://github.com/arq5x/bedtools2 to install BEDTools, and make sure it is on your path and you are able to call bedtools from any directory.
+Please read the instructions at https://github.com/arq5x/bedtools2 to install BEDTools, and make sure it is on your path.
 
 
 Install required R packages
 ---------------------------
 
-Intervene rquires three R packages, `UpSetR <https://cran.r-project.org/package=UpSetR>`_ , `corrplot <https://cran.r-project.org/package=corrplot>`_ for visualization and `Cairo <https://cran.r-project.org/package=Cairo>`_ to generate high-quality vector and bitmap figures.
+Intervene requires the R packages `UpSetR <https://cran.r-project.org/package=UpSetR>`_ and `corrplot <https://cran.r-project.org/package=corrplot>`_ for visualization, and `Cairo <https://cran.r-project.org/package=Cairo>`_ for high-quality vector and bitmap output.
 
 .. code-block:: R
 
@@ -94,29 +92,50 @@ Intervene rquires three R packages, `UpSetR <https://cran.r-project.org/package=
 
 Install Intervene from source
 =============================
-You can install a development version by using ``git`` from GitHub or Bitbucket.
-
-
-Install development version from `Bitbucket`
---------------------------------------------
-
-If you have `git` installed, use this:
-
-.. code-block:: bash
-
-    git clone https://bitbucket.org/CBGR/intervene.git
-    cd intervene
-    python setup.py sdist install
-
-Install development version from `GitHub`
------------------------------------------
-If you have `git` installed, use this:
 
 .. code-block:: bash
 
     git clone https://github.com/asntech/intervene.git
     cd intervene
-    python setup.py sdist install
+    pip install -e .
+
+Development environment with pixi
+----------------------------------
+
+`pixi <https://pixi.sh>`_ manages all Python, R, and system dependencies in a reproducible environment.
+
+.. code-block:: bash
+
+    git clone https://github.com/asntech/intervene.git
+    cd intervene
+    pixi run dev-install
+
+Useful development tasks:
+
+.. code-block:: bash
+
+    pixi run test        # run a basic smoke test
+    pixi run lint        # run ruff linter
+    pixi run typecheck   # run pyright type checker
+    pixi run check       # lint + typecheck together
+
+Releasing a new version
+-----------------------
+
+1. Update the version in ``intervene/__init__.py``
+2. Commit and tag the release:
+
+   .. code-block:: bash
+
+       git commit -am "release vX.Y.Z"
+       git tag vX.Y.Z
+
+3. Build and publish to PyPI:
+
+   .. code-block:: bash
+
+       pixi run build     # builds sdist and wheel into dist/
+       pixi run publish   # uploads to PyPI via twine
 
 How to use Intervene
 ====================
